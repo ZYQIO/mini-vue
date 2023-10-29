@@ -1,5 +1,8 @@
 import { extend } from "../shared";
 
+
+let activeEffect;
+let shouleTrack;
 class ReactiveEffect {
     private _fn: any;
     // deps: any[];
@@ -14,14 +17,25 @@ class ReactiveEffect {
     }
 
     run() {
+        if (!this.active) {
+            return this._fn()
+        }
+
+        shouleTrack = true
         activeEffect = this;
-        return this._fn()
+
+        const result = this._fn();
+
+        // reset 
+        shouleTrack = false;
+
+        return result;
     }
 
     stop() {
         if (this.active) {
             cleanupEffect(this)
-            if(this.onStop) {
+            if (this.onStop) {
                 this.onStop()
             }
             this.active = false;
@@ -33,10 +47,16 @@ function cleanupEffect(effect) {
     effect.deps.forEach((dep) => {
         dep.delete(effect)
     });
+
+    effect.deps.length = 0
 }
 
 const targetMap = new Map()
 export function track(target, key) {
+    // if (!activeEffect) return;
+    // if (!shouleTrack) return
+    if (!isTracking()) return;
+
     // target -> key -> deo
     let depsMap = targetMap.get(target)
 
@@ -51,11 +71,15 @@ export function track(target, key) {
         depsMap.set(key, dep)
     }
 
-    if (!activeEffect) return;
+    // 如果已经在dep中，那么不需要重复收集
+    if(dep.has(activeEffect)) return;
 
     dep.add(activeEffect)
-
     activeEffect.deps.push(dep)
+}
+
+function isTracking() {
+    return shouleTrack && activeEffect !== undefined;
 }
 
 export function trigger(target, key) {
@@ -71,7 +95,6 @@ export function trigger(target, key) {
     }
 }
 
-let activeEffect;
 export function effect(fn, options: any = {}) {
 
     const _effect = new ReactiveEffect(fn, options.scheduler);

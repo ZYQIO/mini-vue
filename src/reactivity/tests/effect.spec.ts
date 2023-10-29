@@ -1,6 +1,6 @@
 import { describe, it, expect, vi } from "vitest";
-import { reactive } from "./reactive";
-import { effect, stop } from "./effect";
+import { reactive } from "../reactive";
+import { effect, stop } from "../effect";
 
 
 describe('effect', () => {
@@ -71,7 +71,11 @@ describe('effect', () => {
         obj.prop = 2
         expect(dummy).toBe(2)
         stop(runner)
-        obj.prop = 3
+        // obj.prop = 3
+
+        // get set
+        // obj.prop++  -->  obj.prop = obj.prop + 1
+        obj.prop++
         expect(dummy).toBe(2)
 
         // stopped effect should still be manually callable
