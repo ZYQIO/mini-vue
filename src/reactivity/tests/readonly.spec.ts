@@ -14,8 +14,8 @@ describe("reactive", () => {
         expect(wrapped.foo).toBe(1)
 
 
-        // expect(isReadonly(wrapped.bar)).toBe(true)
-        // expect(isReadonly(original.bar)).toBe(false)
+        expect(isReadonly(wrapped.bar)).toBe(true)
+        expect(isReadonly(original.bar)).toBe(false)
         // expect(wrapped.bar.baz).toBe(2)
         // expect(isProxy(wrapped)).toBe(true)
     })
