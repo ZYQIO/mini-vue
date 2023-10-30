@@ -29,7 +29,7 @@ export const App = {
         // composition api
 
         return {
-            msg: 'mini-vue hahhah'
+            msg: 'mini-vue hahhah s234'
         }
     }
 
