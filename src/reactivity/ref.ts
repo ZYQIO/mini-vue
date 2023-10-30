@@ -60,3 +60,20 @@ export function unRef(ref) {
     // 看看是不是一个ref对象，是就返回 ref 的 value
     return isRef(ref) ? ref.value : ref;
 }
+
+export function proxyRefs(objectWithRefs) {
+    return new Proxy(objectWithRefs, {
+        get(target, key) {
+            return unRef(Reflect.get(target, key))
+        },
+
+        set(target, key, value) {
+            if(isRef(target[key]) && !isRef(value)) {
+                return target[key].value = value;
+            } else {
+                return Reflect.set(target, key, value)
+            }
+        }
+    });
+}
+
