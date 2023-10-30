@@ -66,8 +66,20 @@ function mountElement(vnode, container) {
 
     // props
     for (const key in props) {
+        
         const val = props[key]
-        el.setAttribute(key, val)
+        // 具体的 click --> 重构成通用的
+        // on + Event name
+        // onMousedown
+
+        const isOn = (key: string) => /^on[A-Z]/.test(key)
+
+        if (isOn(key)) {
+            const event = key.slice(2).toLocaleLowerCase()
+            el.addEventListener(event, val)
+        } else {
+            el.setAttribute(key, val)
+        }
     }
 
     container.append(el)
