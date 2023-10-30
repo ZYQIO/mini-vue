@@ -8,8 +8,6 @@ export function render(vnode, container) {
 }
 
 function patch(vnode, container) {
-    debugger
-
     // 会被递归调用，在这里会判断虚拟节点的类型，看看到底是component类型，还是一个element类型
 
     // 判断是不是 element，是就去处理element类型
@@ -29,7 +27,7 @@ function processElement(vnode, container) {
 }
 
 function mountElement(vnode, container) {
-    const el = document.createElement(vnode.type)
+    const el = (vnode.el = document.createElement(vnode.type))
 
     // string array
     const { children, props } = vnode
@@ -63,18 +61,22 @@ function processComponent(vnode, container) {
     mountComponent(vnode, container)
 }
 
-function mountComponent(vnode: any, container) {
-    const instance = createComponentInstance(vnode)
+function mountComponent(initialVNode: any, container) {
+    const instance = createComponentInstance(initialVNode)
 
     setupComponent(instance)
-    setupRenderEffect(instance, container)
+    setupRenderEffect(instance, initialVNode, container)
 }
-function setupRenderEffect(instance: any, container) {
-    const subTree = instance.render()
+function setupRenderEffect(instance: any, initialVNode, container) {
+    const { proxy } = instance
+    const subTree = instance.render.call(proxy)
 
     // vnode -> patch; 基于返回的虚拟节点去进一步的调用patch，
     // 现在我们已经知道虚拟节点是 element 类型，下一步就是把element挂载出来
     // vnode -> element -> mountElement
     patch(subTree, container)
+
+    // element  -> mount
+    initialVNode.el = subTree.el;
 }
 

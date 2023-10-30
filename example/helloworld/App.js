@@ -1,5 +1,6 @@
 import { h } from '../../lib/guide-mini-vue.esm.js'
 
+window.self = null
 export const App = {
     // .vue
     // <template></template>
@@ -8,17 +9,18 @@ export const App = {
     // template 需要编译能力，暂时只实现 render
 
     render() {
+        window.self = this;
 
         return h("div",
             {
                 id: 'root',
                 class: ['red', 'hard']
             },
-            // "hi, " + this.msg
+            "hi, " + this.msg
             // string
             // "hi, mini-vue" 
             // Array
-            [h('p', { class: 'red' }, 'hi'), h('p', { class: 'blue' }, 'mini-vue')]
+            // [h('p', { class: 'red' }, 'hi'), h('p', { class: 'blue' }, 'mini-vue')]
         )
 
     },
@@ -27,7 +29,7 @@ export const App = {
         // composition api
 
         return {
-            msg: 'mini-vue'
+            msg: 'mini-vue hahhah'
         }
     }
 
