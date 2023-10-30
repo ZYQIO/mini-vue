@@ -3,7 +3,7 @@ import { extend } from "../shared";
 
 let activeEffect;
 let shouleTrack;
-class ReactiveEffect {
+export class ReactiveEffect {
     private _fn: any;
     // deps: any[];
     scheduler: Function | undefined;
