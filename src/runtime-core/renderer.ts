@@ -11,6 +11,7 @@ function patch(vnode, container) {
     // 会被递归调用，在这里会判断虚拟节点的类型，看看到底是component类型，还是一个element类型
 
     // 判断是不是 element，是就去处理element类型
+    // processElement()
 
     // 去处理组件
     processComponent(vnode, container)
