@@ -1,6 +1,6 @@
-import { isObject } from "../shared"
 import { ShapeFlags } from "../shared/ShapeFlags"
 import { createComponentInstance, setupComponent } from "./component"
+import { Fragment, Text } from "./vnode";
 
 
 export function render(vnode, container) {
@@ -9,31 +9,38 @@ export function render(vnode, container) {
 }
 
 function patch(vnode, container) {
-    // 会被递归调用，在这里会判断虚拟节点的类型，看看到底是component类型，还是一个element类型
+    const { type, shapeFlag } = vnode;
 
-    // 判断是不是 element，是就去处理element类型
+    // Fragment --> 只需要渲染 children 内容
+    switch (type) {
+        case Fragment:
+            processFragment(vnode, container)
+            break;
+        case Text:
+            processText(vnode, container)
+            break;
 
-    // // 改造前
-    // if (typeof vnode.type === 'string') {
-
-    //     processElement(vnode, container)
-
-    // } else if (isObject(vnode.type)) {
-    //     // 去处理组件
-    //     processComponent(vnode, container)
-    // }
-
-    // 改造后
-    const { shapeFlag } = vnode;
-    if (shapeFlag & ShapeFlags.ELEMENT) {
-
-        processElement(vnode, container)
-
-    } else if (shapeFlag & ShapeFlags.STATEFUL_COMPONENT) {
-        // 去处理组件
-        processComponent(vnode, container)
+        default:
+            // 改造后
+            if (shapeFlag & ShapeFlags.ELEMENT) {
+                processElement(vnode, container)
+            } else if (shapeFlag & ShapeFlags.STATEFUL_COMPONENT) {
+                processComponent(vnode, container)
+            }
+            break;
     }
 
+}
+
+function processText(vnode, container) {
+    const { children } = vnode
+    const textNode = vnode.el = document.createTextNode(children)
+    container.append(textNode)
+}
+
+
+function processFragment(vnode, container) {
+    mountChildren(vnode, container)
 }
 
 function processElement(vnode, container) {
@@ -66,7 +73,7 @@ function mountElement(vnode, container) {
 
     // props
     for (const key in props) {
-        
+
         const val = props[key]
         // 具体的 click --> 重构成通用的
         // on + Event name
@@ -115,4 +122,5 @@ function setupRenderEffect(instance: any, initialVNode, container) {
     // element  -> mount
     initialVNode.el = subTree.el;
 }
+
 
