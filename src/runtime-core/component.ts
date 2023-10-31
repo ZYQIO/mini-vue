@@ -39,12 +39,16 @@ export function setupStatefulComponent(instance) {
     const { setup } = Component;
 
     if (setup) {
+        serCurrentInstance(instance)
         // setup 可以返回一个function， 也可以返回一个 object
         // 如果是一个函数，我们就认为它是我们组件的一个render函数，
         // 如果返回的是一个object , 会把返回的这个object对象给注入到当前组件的上下文中
         const setupResult = setup(shallowReadonly(instance.props), {
             emit: instance.emit
         })
+        
+        serCurrentInstance(null)
+        
         handleSetupResult(instance, setupResult)
     }
 
@@ -69,4 +73,13 @@ function finishComponentSetup(instance: any) {
     const Component = instance.type;
 
     instance.render = Component.render
+}
+
+let currentInstance = null
+export function getCurrentInstance() {
+    return currentInstance;
+}
+
+export function serCurrentInstance(instance) {
+    currentInstance = instance;
 }
