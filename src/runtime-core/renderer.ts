@@ -3,12 +3,13 @@ import { createComponentInstance, setupComponent } from "./component"
 import { Fragment, Text } from "./vnode";
 import { createAppAPI } from "./createApp";
 import { effect } from "../reactivity/effect";
+import { EMPTY_OBJ } from "../shared";
 
 export function createRenderer(options) {
     const {
-        createElement,
-        patchProp,
-        insert
+        createElement: hostCreateElement,
+        patchProp: hostPatchProp,
+        insert: hostInsert
     } = options;
 
     function render(vnode, container) {
@@ -55,7 +56,7 @@ export function createRenderer(options) {
     }
 
     function processElement(n1, n2, container, parentComponent) {
-        if(!n1) {
+        if (!n1) {
             // init
             mountElement(n2, container, parentComponent)
         } else {
@@ -69,12 +70,42 @@ export function createRenderer(options) {
         console.log('container', container);
 
         // props
+        const oldProps = n1.props || EMPTY_OBJ
+        const newProps = n2.props || EMPTY_OBJ
+
+        const el = n2.el = n1.el;
+
+        patchProps(el, oldProps, newProps)
         // children
-        
+
+    }
+
+    function patchProps(el, oldProps, newProps) {
+        // 1. 遍历 props
+        // 2. 对比 props
+        // 3. 更新 props
+        if (oldProps !== newProps) {
+            for (let key in newProps) {
+                const prevProp = oldProps[key]
+                const nextProp = newProps[key]
+                if (prevProp !== nextProp) {
+                    // 更新 props
+                    hostPatchProp(el, key, prevProp, nextProp)
+                }
+            }
+
+            if (oldProps !== EMPTY_OBJ) {
+                for (const key in oldProps) {
+                    if (!(key in newProps)) {
+                        hostPatchProp(el, key, oldProps[key], null)
+                    }
+                }
+            }
+        }
     }
 
     function mountElement(vnode, container, parentComponent) {
-        const el = (vnode.el = createElement(vnode.type))
+        const el = (vnode.el = hostCreateElement(vnode.type))
 
         // string array
         const { children, props, shapeFlag } = vnode;
@@ -94,11 +125,11 @@ export function createRenderer(options) {
             // 具体的 click --> 重构成通用的
             // on + Event name
             // onMousedown
-            patchProp(el, key, val)
+            hostPatchProp(el, key, null, val)
         }
 
         // container.append(el)
-        insert(el, container)
+        hostInsert(el, container)
     }
 
     function mountChildren(vnode, container, parentComponent) {
@@ -119,7 +150,6 @@ export function createRenderer(options) {
     }
     function setupRenderEffect(instance: any, initialVNode, container) {
         effect(() => {
-
             if (!instance.isMounted) {
                 // init
 
@@ -137,11 +167,11 @@ export function createRenderer(options) {
             } else {
                 // update
                 const { proxy } = instance
-                const subTree = instance.subTree = instance.render.call(proxy)
+                const subTree = instance.render.call(proxy)
                 const prevSubTree = instance.subTree;
 
                 instance.subTree = subTree;
-                
+
                 patch(prevSubTree, subTree, container, instance)
             }
 
