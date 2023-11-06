@@ -2,6 +2,7 @@ import { ShapeFlags } from "../shared/ShapeFlags"
 import { createComponentInstance, setupComponent } from "./component"
 import { Fragment, Text } from "./vnode";
 import { createAppAPI } from "./createApp";
+import { effect } from "../reactivity/effect";
 
 export function createRenderer(options) {
     const {
@@ -12,47 +13,64 @@ export function createRenderer(options) {
 
     function render(vnode, container) {
         // patch
-        patch(vnode, container, null)
+        patch(null, vnode, container, null)
     }
 
-    function patch(vnode, container, parentComponent) {
-        
-        const { type, shapeFlag } = vnode;
+    // n1 --> 老的虚拟节点，如果n1不存在，那肯定就是一个初始化，反之，存在就是一个更新的逻辑
+    // n2 --> 新的虚拟节点
+    function patch(n1, n2, container, parentComponent) {
+
+        const { type, shapeFlag } = n2;
 
         // Fragment --> 只需要渲染 children 内容
         switch (type) {
             case Fragment:
-                processFragment(vnode, container, parentComponent)
+                processFragment(n1, n2, container, parentComponent)
                 break;
             case Text:
-                processText(vnode, container)
+                processText(n1, n2, container)
                 break;
 
             default:
                 // 改造后
                 if (shapeFlag & ShapeFlags.ELEMENT) {
-                    processElement(vnode, container, parentComponent)
+                    processElement(n1, n2, container, parentComponent)
                 } else if (shapeFlag & ShapeFlags.STATEFUL_COMPONENT) {
-                    processComponent(vnode, container, parentComponent)
+                    processComponent(n1, n2, container, parentComponent)
                 }
                 break;
         }
 
     }
 
-    function processText(vnode, container) {
-        const { children } = vnode
-        const textNode = vnode.el = document.createTextNode(children)
+    function processText(n1, n2, container) {
+        const { children } = n2
+        const textNode = n2.el = document.createTextNode(children)
         container.append(textNode)
     }
 
 
-    function processFragment(vnode, container, parentComponent) {
-        mountChildren(vnode, container, parentComponent)
+    function processFragment(n1, n2, container, parentComponent) {
+        mountChildren(n2, container, parentComponent)
     }
 
-    function processElement(vnode, container, parentComponent) {
-        mountElement(vnode, container, parentComponent)
+    function processElement(n1, n2, container, parentComponent) {
+        if(!n1) {
+            // init
+            mountElement(n2, container, parentComponent)
+        } else {
+            patchElement(n1, n2, container)
+        }
+    }
+
+    function patchElement(n1, n2, container) {
+        console.log('n1', n1);
+        console.log('n2', n2);
+        console.log('container', container);
+
+        // props
+        // children
+        
     }
 
     function mountElement(vnode, container, parentComponent) {
@@ -85,12 +103,12 @@ export function createRenderer(options) {
 
     function mountChildren(vnode, container, parentComponent) {
         vnode.children.forEach(v => {
-            patch(v, container, parentComponent)
+            patch(null, v, container, parentComponent)
         })
     }
 
-    function processComponent(vnode, container, parentComponent) {
-        mountComponent(vnode, container, parentComponent)
+    function processComponent(n1, n2, container, parentComponent) {
+        mountComponent(n2, container, parentComponent)
     }
 
     function mountComponent(initialVNode: any, container, parentComponent) {
@@ -100,15 +118,34 @@ export function createRenderer(options) {
         setupRenderEffect(instance, initialVNode, container)
     }
     function setupRenderEffect(instance: any, initialVNode, container) {
-        const { proxy } = instance
-        const subTree = instance.render.call(proxy)
-        // vnode -> patch; 基于返回的虚拟节点去进一步的调用patch，
-        // 现在我们已经知道虚拟节点是 element 类型，下一步就是把element挂载出来
-        // vnode -> element -> mountElement
-        patch(subTree, container, instance)
+        effect(() => {
 
-        // element  -> mount
-        initialVNode.el = subTree.el;
+            if (!instance.isMounted) {
+                // init
+
+                const { proxy } = instance
+                const subTree = instance.subTree = instance.render.call(proxy)
+                // vnode -> patch; 基于返回的虚拟节点去进一步的调用patch，
+                // 现在我们已经知道虚拟节点是 element 类型，下一步就是把element挂载出来
+                // vnode -> element -> mountElement
+                patch(null, subTree, container, instance)
+
+                // element  -> mount
+                initialVNode.el = subTree.el;
+
+                instance.isMounted = true
+            } else {
+                // update
+                const { proxy } = instance
+                const subTree = instance.subTree = instance.render.call(proxy)
+                const prevSubTree = instance.subTree;
+
+                instance.subTree = subTree;
+                
+                patch(prevSubTree, subTree, container, instance)
+            }
+
+        })
     }
 
 

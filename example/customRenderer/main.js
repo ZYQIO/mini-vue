@@ -14,7 +14,6 @@ document.body.appendChild(game.view)
 
 const renderer = createRenderer({
     createElement(type) {
-        console.log('createElement-->', type);
         if (type === 'rect') {
             const rect = new PIXI.Graphics()
             rect.beginFill(0xff0000)

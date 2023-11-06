@@ -8,10 +8,6 @@ export function createAppAPI(render) {
                 // 先把所有的都转换成 vnode
                 // component --> vnode
                 // 所有的逻辑操作都会基于 vnode(虚拟节点)
-
-                console.count('mount调用的次数：');
-                
-
                 const vnode = createVNode(rootComponent)
 
                 render(vnode, rootContainer)
