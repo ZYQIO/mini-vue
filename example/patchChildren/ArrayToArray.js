@@ -44,18 +44,20 @@ import { ref, h } from '../../lib/guide-mini-vue.esm.js'
 //   h("p", { key: "A" }, "A"),
 //   h("p", { key: "B" }, "B"),
 //   h("p", { key: "C" }, "C"),
+//   h("p", { key: "D" }, "D"),
 // ];
 
 // 右侧
 // (a b)
 // c (a b)
 // i = 0, e1 = -1, e2 = 0
-// const prevChildren = [h("p", { key: "A" }, "A"), h("p", { key: "B" }, "B")];
-// const nextChildren = [
-//     h("p", { key: "C" }, "C"),
-//     h("p", { key: "A" }, "A"),
-//     h("p", { key: "B" }, "B"),
-// ];
+const prevChildren = [h("p", { key: "A" }, "A"), h("p", { key: "B" }, "B")];
+const nextChildren = [
+    h("p", { key: "D" }, "D"),
+    h("p", { key: "C" }, "C"),
+    h("p", { key: "A" }, "A"),
+    h("p", { key: "B" }, "B"),
+];
 
 // 4. 老的比新的长
 //     删除老的
@@ -67,6 +69,7 @@ import { ref, h } from '../../lib/guide-mini-vue.esm.js'
 //     h("p", { key: "A" }, "A"),
 //     h("p", { key: "B" }, "B"),
 //     h("p", { key: "C" }, "C"),
+//     h("p", { key: "D" }, "D"),
 // ];
 // const nextChildren = [h("p", { key: "A" }, "A"), h("p", { key: "B" }, "B")];
 
@@ -175,27 +178,27 @@ import { ref, h } from '../../lib/guide-mini-vue.esm.js'
 // a,b,(d,c,y,e),f,g
 // 最长子序列： [1,3]
 
-const prevChildren = [
-    h("p", { key: "A" }, "A"),
-    h("p", { key: "B" }, "B"),
-    h("p", { key: "C" }, "C"),
-    h("p", { key: "D" }, "D"),
-    h("p", { key: "E" }, "E"),
-    h("p", { key: "Z" }, "Z"),
-    h("p", { key: "F" }, "F"),
-    h("p", { key: "G" }, "G"),
-];
+// const prevChildren = [
+//     h("p", { key: "A" }, "A"),
+//     h("p", { key: "B" }, "B"),
+//     h("p", { key: "C" }, "C"),
+//     h("p", { key: "D" }, "D"),
+//     h("p", { key: "E" }, "E"),
+//     h("p", { key: "Z" }, "Z"),
+//     h("p", { key: "F" }, "F"),
+//     h("p", { key: "G" }, "G"),
+// ];
 
-const nextChildren = [
-    h("p", { key: "A" }, "A"),
-    h("p", { key: "B" }, "B"),
-    h("p", { key: "D" }, "D"),
-    h("p", { key: "C" }, "C"),
-    h("p", { key: "Y" }, "Y"),
-    h("p", { key: "E" }, "E"),
-    h("p", { key: "F" }, "F"),
-    h("p", { key: "G" }, "G"),
-];
+// const nextChildren = [
+//     h("p", { key: "A" }, "A"),
+//     h("p", { key: "B" }, "B"),
+//     h("p", { key: "D" }, "D"),
+//     h("p", { key: "C" }, "C"),
+//     h("p", { key: "Y" }, "Y"),
+//     h("p", { key: "E" }, "E"),
+//     h("p", { key: "F" }, "F"),
+//     h("p", { key: "G" }, "G"),
+// ];
 
 // 3. 创建新的节点
 // a,b,(c,e),f,g
@@ -231,18 +234,27 @@ export default {
         }
     },
     render() {
-        return h("div", {}, [
-            h(
-                "button",
-                {
-                    onClick: () => {
-                        isChange.value = !isChange.value;
-                    },
-                },
-                "测试子组件之间的 patch 逻辑"
-            ),
-            h("children", {}, isChange.value === true ? nextChildren : prevChildren),
-        ]);
+
+        const self = this;
+
+
+        return self.isChange === true
+            ? h("div", {}, nextChildren)
+            : h("div", {}, prevChildren);
+
+
+        // return h("div", {}, [
+        //     // h(
+        //     //     "button",
+        //     //     {
+        //     //         onClick: () => {
+        //     //             isChange.value = !isChange.value;
+        //     //         },
+        //     //     },
+        //     //     "测试子组件之间的 patch 逻辑"
+        //     // ),
+        //     // h("children", {}, isChange.value === true ? nextChildren : prevChildren),
+        // ]);
     }
 }
 
