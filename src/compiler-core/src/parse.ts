@@ -9,37 +9,77 @@ export function baseParse(content: string) {
 
     const context = createParserContext(content)
 
-    return createRoot(parseChildren(context))
+    return createRoot(parseChildren(context, []))
 }
 
-function parseChildren(context) {
+function parseChildren(context, ancestors) {
 
     const nodes: any[] = []
 
-    let node;
-    const s = context.source;
-    if (s.startsWith('{{')) {
-        node = parseInterpolation(context)
-    } else if (s[0] === "<") {
-        if (/[a-z]/i.test(s[1])) {
-            node = parseElement(context);
+    while (!isEnd(context, ancestors)) {
+
+        let node;
+        const s = context.source;
+        if (s.startsWith('{{')) {
+            node = parseInterpolation(context)
+        } else if (s[0] === "<") {
+            if (/[a-z]/i.test(s[1])) {
+                node = parseElement(context, ancestors);
+            }
         }
-    }
 
-    if (!node) {
-        node = parseText(context)
-    }
+        if (!node) {
+            node = parseText(context)
+        }
 
-    nodes.push(node)
+        nodes.push(node)
+    }
 
     return nodes
 }
 
-function parseText(context) {
-    // 1. 获取当前的内容
-    const content = parseTextData(context, context.source.length)
+function isEnd(context, ancestors) {
+    // 2. 当遇到结束标签的时候
+    const s = context.source;
 
-    console.log('---', context.source.length);
+    if (s.startsWith('</')) {
+        for (let i = ancestors.length - 1; i >= 0; i--) {
+            const tag = ancestors[i].tag;
+            // 优化前
+            // if (s.slice(2, 2 + tag.length) === tag) {
+            //     return true;
+            // }
+
+            // 优化后
+            if (startsWithEndTagOpen(s, tag)) {
+                return true;
+            }
+        }
+    }
+
+    // if (parentTag && s.startsWith(`</${parentTag}>`)) {
+    //     return true;
+    // }
+
+    // 1. source 有值的时候
+    return !context.source
+}
+
+function parseText(context) {
+    let endIndex = context.source.length;
+    let endTokens = ['<', "{{"]
+
+    for (let i = 0; i < endTokens.length; i++) {
+        let index = context.source.indexOf(endTokens[i])
+        if (index !== -1 && endIndex > index) {
+            endIndex = index;
+        }
+    }
+
+    // 1. 获取当前的内容
+    const content = parseTextData(context, endIndex)
+
+    console.log('---', content);
 
     return {
         type: NodeTypes.TEXT,
@@ -55,12 +95,26 @@ function parseTextData(context, length) {
     return content;
 }
 
-function parseElement(context) {
-    const element = parseTag(context, TagType.Start)
+function parseElement(context, ancestors) {
+    const element: any = parseTag(context, TagType.Start)
 
-    parseTag(context, TagType.End)
+    ancestors.push(element)
+
+    element.children = parseChildren(context, ancestors)
+
+    ancestors.pop()
+
+    if (startsWithEndTagOpen(context.source, element.tag)) {
+        parseTag(context, TagType.End)
+    } else {
+        throw new Error(`缺少结束标签: ${element.tag}`)
+    }
 
     return element;
+}
+
+function startsWithEndTagOpen(source, tag) {
+    return source.startsWith("</") && source.slice(2, 2 + tag.length).toLocaleLowerCase() === tag.toLocaleLowerCase();
 }
 
 function parseTag(context, type: TagType) {
