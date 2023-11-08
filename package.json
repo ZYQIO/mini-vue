@@ -6,7 +6,7 @@
   "module": "lib/guide-mini-vue.esm.js",
   "type": "module",
   "scripts": {
-    "test": "vitest run",
+    "test": "vitest run -u",
     "build": "rollup -c rollup.config.js"
   },
   "keywords": [],
