@@ -41,7 +41,7 @@ function createCodegenContext(ast) {
             context.code += source
         },
         helper(key) {
-            return `${helperMapName[key]}`;
+            return `_${helperMapName[key]}`;
         }
     }
 
@@ -58,8 +58,10 @@ function genNode(node, context) {
 
         case NodeTypes.INTERPOLATION:
             genInterpolation(node, context);
+            break
         case NodeTypes.SIMPLE_EXPRESSION:
             genExpression(node, context);
+            break
         default:
             break;
     }
