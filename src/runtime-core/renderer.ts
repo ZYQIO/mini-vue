@@ -396,7 +396,7 @@ export function createRenderer(options) {
                 // init
 
                 const { proxy } = instance
-                const subTree = instance.subTree = instance.render.call(proxy)
+                const subTree = instance.subTree = instance.render.call(proxy, proxy)
                 // vnode -> patch; 基于返回的虚拟节点去进一步的调用patch，
                 // 现在我们已经知道虚拟节点是 element 类型，下一步就是把element挂载出来
                 // vnode -> element -> mountElement
@@ -417,7 +417,7 @@ export function createRenderer(options) {
                 }
 
                 const { proxy } = instance
-                const subTree = instance.render.call(proxy)
+                const subTree = instance.render.call(proxy, proxy)
                 const prevSubTree = instance.subTree;
 
                 instance.subTree = subTree;

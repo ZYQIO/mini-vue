@@ -4,6 +4,8 @@ export const Fragment = Symbol("Fragment")
 
 export const Text = Symbol("Text")
 
+export { createVNode as createElementVNode }
+
 export function createVNode(type, props?, children?) {
     const vnode = {
         type,
@@ -15,8 +17,8 @@ export function createVNode(type, props?, children?) {
         el: null
     }
 
-     // children
-     if (typeof children === 'string') {
+    // children
+    if (typeof children === 'string') {
         vnode.shapeFlag |= ShapeFlags.TEXT_CHILDREN
     } else if (Array.isArray(children)) {
         vnode.shapeFlag |= ShapeFlags.ARRAY_CHILDREN
