@@ -1,4 +1,6 @@
-'use strict';
+function toDisplayString(value) {
+    return String(value);
+}
 
 var ShapeFlags;
 (function (ShapeFlags) {
@@ -21,6 +23,28 @@ var ShapeFlags;
 // 1000
 // ----
 // 1001
+
+const extend = Object.assign;
+const EMPTY_OBJ = {};
+const isObject = (val) => {
+    return val !== null && typeof val === 'object';
+};
+const isString = (value) => typeof value === 'string';
+const hasChanged = (val, newValue) => {
+    return !Object.is(val, newValue);
+};
+const hasOwn = (val, key) => Object.prototype.hasOwnProperty.call(val, key);
+const camelize = (str) => {
+    return str.replace(/-(\w)/g, (_, c) => {
+        return c ? c.toLocaleUpperCase() : "";
+    });
+};
+const capitalize = (str) => {
+    return str.charAt(0).toLocaleUpperCase() + str.slice(1);
+};
+const toHandlerKey = (str) => {
+    return str ? "on" + capitalize(str) : '';
+};
 
 const Fragment = Symbol("Fragment");
 const Text = Symbol("Text");
@@ -72,32 +96,6 @@ function renderSlots(slots, name, props) {
         }
     }
 }
-
-function toDisplayString(value) {
-    return String(value);
-}
-
-const extend = Object.assign;
-const EMPTY_OBJ = {};
-const isObject = (val) => {
-    return val !== null && typeof val === 'object';
-};
-const isString = (value) => typeof value === 'string';
-const hasChanged = (val, newValue) => {
-    return !Object.is(val, newValue);
-};
-const hasOwn = (val, key) => Object.prototype.hasOwnProperty.call(val, key);
-const camelize = (str) => {
-    return str.replace(/-(\w)/g, (_, c) => {
-        return c ? c.toLocaleUpperCase() : "";
-    });
-};
-const capitalize = (str) => {
-    return str.charAt(0).toLocaleUpperCase() + str.slice(1);
-};
-const toHandlerKey = (str) => {
-    return str ? "on" + capitalize(str) : '';
-};
 
 let activeEffect;
 let shouleTrack;
@@ -185,6 +183,9 @@ function effect(fn, options = {}) {
     runner._effect = _effect;
     return runner;
 }
+function stop(runner) {
+    runner._effect.stop();
+}
 
 const get = createGetter();
 const set = createSetter();
@@ -242,6 +243,15 @@ function readonly(raw) {
 }
 function shallowReadonly(raw) {
     return createActiveObject(raw, shallowReadonlyHandlers);
+}
+function isReactive(value) {
+    return !!value["__v_isReactive" /* ReactiveFlags.IS_REACTIVE */];
+}
+function isReadonly(value) {
+    return !!value["__v_isReadonly" /* ReactiveFlags.IS_READONLY */];
+}
+function isProxy(value) {
+    return isReactive(value) || isReadonly(value);
 }
 function createActiveObject(raw, baseHandlers) {
     if (!isObject(raw)) {
@@ -311,7 +321,7 @@ function proxyRefs(objectWithRefs) {
 }
 
 function emit(instance, event, ...args) {
-    // console.log('emit', event);
+    console.log('emit', event);
     const { props } = instance;
     // TPP
     // 先去写一个特定的行为, --> 然后重构成通用的行为
@@ -995,16 +1005,26 @@ var runtimeDom = /*#__PURE__*/Object.freeze({
     createElementVNode: createVNode,
     createRenderer: createRenderer,
     createTextVNode: createTextVNode,
+    effect: effect,
     getCurrentInstance: getCurrentInstance,
     h: h,
     inject: inject,
+    isProxy: isProxy,
+    isReactive: isReactive,
+    isReadonly: isReadonly,
+    isRef: isRef,
     nextTick: nextTick,
     provide: provide,
     proxyRefs: proxyRefs,
+    reactive: reactive,
+    readonly: readonly,
     ref: ref,
     registerRuntimeCompiler: registerRuntimeCompiler,
     renderSlots: renderSlots,
-    toDisplayString: toDisplayString
+    shallowReadonly: shallowReadonly,
+    stop: stop,
+    toDisplayString: toDisplayString,
+    unRef: unRef
 });
 
 const TO_DISPLAY_STRING = Symbol('toDisplayString');
@@ -1415,17 +1435,4 @@ function compileToFunction(template) {
 }
 registerRuntimeCompiler(compileToFunction);
 
-exports.createApp = createApp;
-exports.createElementVNode = createVNode;
-exports.createRenderer = createRenderer;
-exports.createTextVNode = createTextVNode;
-exports.getCurrentInstance = getCurrentInstance;
-exports.h = h;
-exports.inject = inject;
-exports.nextTick = nextTick;
-exports.provide = provide;
-exports.proxyRefs = proxyRefs;
-exports.ref = ref;
-exports.registerRuntimeCompiler = registerRuntimeCompiler;
-exports.renderSlots = renderSlots;
-exports.toDisplayString = toDisplayString;
+export { createApp, createVNode as createElementVNode, createRenderer, createTextVNode, effect, getCurrentInstance, h, inject, isProxy, isReactive, isReadonly, isRef, nextTick, provide, proxyRefs, reactive, readonly, ref, registerRuntimeCompiler, renderSlots, shallowReadonly, stop, toDisplayString, unRef };
